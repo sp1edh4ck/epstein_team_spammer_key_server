@@ -7,8 +7,6 @@ from database.crud import Database
 app = FastAPI()
 db = Database()
 
-asyncio.run(db.connect())
-
 
 @app.get("/get_version")
 async def get_version():
@@ -35,3 +33,11 @@ async def bind_by_hardware(data):
     if not current_hardware:
         await db.bind_hardware(data.key, hardware_id)
     return {"status": True}
+
+
+async def main():
+    await db.connect()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
