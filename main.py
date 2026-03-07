@@ -13,7 +13,7 @@ async def get_version():
     return {"version": "0.0.1"}
 
 
-@app.post("/check_by_key")
+@app.get("/check_by_key")
 async def check_by_key(data):
     license_data = await db.get_license(data.key)
     if license_data and license_data["is_active"]:
