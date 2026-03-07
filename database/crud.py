@@ -18,6 +18,10 @@ class Database:
         async with self.pool.acquire() as conn:
             return await conn.fetchrow("SELECT * FROM licenses WHERE license_key=$1", key)
 
-    async def bind_hardware(self, key, hardware_id):
+    async def set_hwid(self, key, hwid):
         async with self.pool.acquire() as conn:
-           return await conn.execute("UPDATE licenses SET hardware_id=$1 WHERE license_key=$2", hardware_id, key)
+           return await conn.execute("UPDATE licenses SET hwid=$1 WHERE license_key=$2", hwid, key)
+
+    async def get_hwid(self, key):
+        async with self.pool.acquire() as conn:
+           return await conn.fetchval("SELECT hwid FROM licenses WHERE license_key=$1", key)

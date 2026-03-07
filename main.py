@@ -1,14 +1,9 @@
 import asyncio
-from contextlib import asynccontextmanager
-from fastapi import FastAPI
-import logging
+
+from fastapi import FastAPI, Request
 from database.crud import Database
 
-db = Database()
-
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+from contextlib import asynccontextmanager
 
 
 @asynccontextmanager
@@ -16,8 +11,8 @@ async def lifespan(app: FastAPI):
     await db.connect()
     yield
 
-
 app = FastAPI(lifespan=lifespan)
+db = Database()
 
 
 @app.get("/get_version")
@@ -25,35 +20,43 @@ async def get_version():
     return {"version": "0.0.1"}
 
 
-@app.get("/check_by_key")
-async def check_by_key(data):
+@app.post("/check_by_key")
+async def check_by_key(request: Request):
+    data = await request.json()
     key = data.get("key")
-    logger.info(f"Checking key: {key}")
     if not key:
         return {"status": False}
-    license_data = await db.get_license(key)
+    try:
+        license_data = await db.get_license(key)
+    except Exception as e:
+        return {"status": False}
     if not license_data:
         return {"status": False}
     return {"status": True}
 
 
-@app.post("/bind_by_hardware")
-async def bind_by_hardware(data):
-    license_data = await db.get_license(data.key)
-    if not license_data or not license_data["is_active"]:
+@app.post("/get_hwid")
+async def bind_by_hardware(request: Request):
+    data = await request.json()
+    key = data.get("key")
+    hwid = data.get("hwid")
+    if not hwid:
         return {"status": False}
-    current_hardware = license_data.get("hardware_id")
-    hardware_id = f"{data.pc_id}_{data.uuid_system}"
-    if current_hardware and current_hardware != hardware_id:
+    try:
+        hwid_data = await db.get_hwid(key)
+    except Exception as e:
+        print(e)
         return {"status": False}
-    if not current_hardware:
-        await db.bind_hardware(data.key, hardware_id)
+    if hwid_data is None:
+        await db.set_hwid(key, hwid)
+        return {"status": True}
+    if hwid != hwid_data:
+        return {"status": False}
     return {"status": True}
 
 
 async def main():
     await db.connect()
-
 
 if __name__ == "__main__":
     asyncio.run(main())
