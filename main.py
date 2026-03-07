@@ -1,11 +1,23 @@
 import asyncio
-
+from contextlib import asynccontextmanager
 from fastapi import FastAPI
-
+import logging
 from database.crud import Database
 
-app = FastAPI()
 db = Database()
+
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+
+@asynccontextmanager
+async def lifespan():
+    await db.connect()
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 
 @app.get("/get_version")
@@ -15,10 +27,14 @@ async def get_version():
 
 @app.get("/check_by_key")
 async def check_by_key(data):
-    license_data = await db.get_license(data.key)
-    if license_data and license_data["is_active"]:
-        return {"status": True}
-    return {"status": False}
+    key = data.get("key")
+    logger.info(f"Checking key: {key}")
+    if not key:
+        return {"status": False}
+    license_data = await db.get_license(key)
+    if not license_data:
+        return {"status": False}
+    return {"status": True}
 
 
 @app.post("/bind_by_hardware")
