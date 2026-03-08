@@ -53,10 +53,3 @@ async def bind_by_hardware(request: Request):
     if hwid != hwid_data:
         return {"status": False}
     return {"status": True}
-
-
-async def main():
-    await db.connect()
-
-if __name__ == "__main__":
-    asyncio.run(main())
