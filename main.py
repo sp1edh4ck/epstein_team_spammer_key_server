@@ -1,9 +1,8 @@
-import asyncio
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request
-from database.crud import Database
 
-from contextlib import asynccontextmanager
+from database.crud import Database
 
 
 @asynccontextmanager
