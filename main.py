@@ -45,7 +45,6 @@ async def bind_by_hardware(request: Request):
     try:
         hwid_data = await db.get_hwid(key)
     except Exception as e:
-        print(e)
         return {"status": False}
     if hwid_data is None:
         await db.set_hwid(key, hwid)
